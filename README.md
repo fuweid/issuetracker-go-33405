@@ -1,6 +1,6 @@
-## [golang/go#33405](https://github.com/golang/go/issues/33405): fd leaking
+# [golang/go#33405](https://github.com/golang/go/issues/33405): fd leaking
 
-### background
+## Background
 
 I run containerd to manage linux containers. One container uses snapshotter
 provided by containerd as rootfs and the files on the snapshotter will be
@@ -11,7 +11,7 @@ If the container inits during snapshotter gc, we found that some
 containerd-shim process, which manages container's life cycle, will contain
 the fd opened by parent - containerd process.
 
-### caused by `os.RemoveAll` function
+## Caused by `os.RemoveAll` function
 
 The `os.RemoveAll` will be called during the snapshotter gc and the
 `os.RemoveAll` does `open` and `unlink` action to remove file and dir.
@@ -57,7 +57,7 @@ The opened fd will be closed when the dir has been removed. If the child
 process is created between `openFdAt` and `close`, the child process will
 get the leaking fds.
 
-### reproduce
+## Reproduce
 
 In order to reproduce this issue easier, I will create dir containing >100
 levels to let `os.RemoveAll` call maintain opened fd longer.
@@ -70,9 +70,10 @@ $ make build
 $ make test
 ```
 
-But please make sure that your golang version is <= 1.12.7 and > 1.11.
+But please make sure that your golang version is (1.11 < version <= 1.12.7)
+and your platform is linux/amd64.
 
-### status
+## Status
 
 golang community has fixed this issue! Please update to 1.12.8 if there is new
-release.
+release. Patch is [here](https://golang.org/cl/188538).
